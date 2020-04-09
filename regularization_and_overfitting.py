@@ -14,6 +14,7 @@ from math import sqrt
 from matplotlib import pyplot as plt
 import random
 
+from sklearn.preprocessing import scale
 from keras.models import Sequential, Model
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Input
 from keras.layers.core import Flatten, Dropout, Lambda
@@ -128,15 +129,26 @@ def main():
 
     X_sc = scale(X_Mat)
 
+    num_folds = 5
+    multiplier_of_num_folds = int(X_Mat.shape[0]/num_folds)
+
+    is_train = np.array(list(np.arange(1,
+                                        num_folds + 1))
+                                        * multiplier_of_num_folds)
+
+    # make sure that test_fold_vec is the same size as X_Mat.shape[0]
+    while is_train.shape[0] != X_sc.shape[0]:
+        is_train = np.append(is_train, random.randint(1, num_folds))
+
+    test_fold = 1
     
     # (10 points) Divide the data into 80% train, 20% test observations (out of all 
     # observations in the whole data set).
     is_train = np.random.choice( [True, False], X_sc.shape[0], p=[.8, .2] )
-
     # (10 points) Next divide the train data into 50% subtrain, 50% validation. 
     # e.g. as described here 
     # https://www.tensorflow.org/tutorials/keras/overfit_and_underfit#the_higgs_dataset
-    subtrain_size = np.sum( is_train == True )
+    subtrain_size = np.sum( is_train == test_fold )
     is_subtrain = np.random.choice( [True, False], subtrain_size, p=[.5, .5] )
 
     X_train = np.delete( X_sc, np.argwhere( is_subtrain != True ), 0)
@@ -148,6 +160,27 @@ def main():
 
     # (10 points) Define a for loop over regularization parameter values, and 
     # fit a neural network for each.
+    hidden_units_vec = 2**np.arange(2)
+
+    units_matrix_list = []
+    
+    # loop over the different hidden units in hidden_units_vec
+    for hidden_units_i in hidden_units_vec:
+        # initialize keras model
+        model = create_model(hidden_units_i) 
+        # add output layer
+        model.add(Dense(1, activation = "sigmoid", use_bias = False))
+
+        # train on x-train, y-train
+        # save results to data table (split_matrix_list) for further analysis
+        units_matrix_list.append(model.fit( x = X_train,
+                                y = y_train,
+                                epochs = MAX_EPOCHS,
+                                validation_data=(X_validation, y_validation),
+                                verbose=2))
+
+    print(units_matrix_list)
+        
 
     # (20 points) On the same plot, show the logistic loss as a function of the 
     # regularization parameter (use a different color for each set, e.g. 
