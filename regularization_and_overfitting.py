@@ -191,14 +191,30 @@ def main():
 
     # (10 points) Define a variable called best_parameter_value which is the 
     # regularization parameter value which minimizes the validation loss.
+    best_parameter_value = 0
+
+    print("The best parameter value is ", best_parameter_value)
 
     # (10 points) Re-train the network on the entire train set (not just the 
     # subtrain set), using the corresponding value of best_parameter_value.
+    final_model = create_model(best_parameter_value) 
+    # add output layer
+    final_model.add(Dense(1, activation = "sigmoid", use_bias = False))
+
+
+    # train on x-train, y-train
+    # save results to data table (split_matrix_list) for further analysis
+    result = final_model.fit( x = X_sc,
+                        y = y_vec,
+                        epochs = MAX_EPOCHS,
+                        verbose=2)
 
     # (10 points) Finally use the learned model to make predictions on the test 
     # set. What is the prediction accuracy? (percent correctly predicted labels 
     # in the test set) What is the prediction accuracy of the baseline model which 
     # predicts the most frequent class in the train labels?
+
+    print("Prediction accuracy (correctly labeled) for the best parameter value is :", final_model.evaluate(X_test,y_test)[1])
 
     
 
