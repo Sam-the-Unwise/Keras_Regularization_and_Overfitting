@@ -1,45 +1,10 @@
-# (10 points) Load the spam data set from 
-# https://web.stanford.edu/~hastie/ElemStatLearn/data.html
-
-# (10 points) Scale the input matrix, same as in previous projects. Or as 
-# described here 
-# https://www.tensorflow.org/tutorials/load_data/csv#data_normalization
-
-# (10 points) Divide the data into 80% train, 20% test observations (out of all 
-# observations in the whole data set).
-
-# (10 points) Next divide the train data into 50% subtrain, 50% validation. 
-# e.g. as described here 
-# https://www.tensorflow.org/tutorials/keras/overfit_and_underfit#the_higgs_dataset
-
-# (10 points) Define a for loop over regularization parameter values, and 
-# fit a neural network for each.
-
-# (20 points) On the same plot, show the logistic loss as a function of the 
-# regularization parameter (use a different color for each set, e.g. 
-# subtrain=solid, validation=dashed). Draw a point to emphasize the minimum 
-# of each validation loss curve. As the strength of regularization decreases, 
-# the train loss should always decrease, whereas the validation loss should 
-# decrease up to a certain point, and then start increasing (overfitting).
-
-# (10 points) Define a variable called best_parameter_value which is the 
-# regularization parameter value which minimizes the validation loss.
-
-# (10 points) Re-train the network on the entire train set (not just the 
-# subtrain set), using the corresponding value of best_parameter_value.
-
-# (10 points) Finally use the learned model to make predictions on the test 
-# set. What is the prediction accuracy? (percent correctly predicted labels 
-# in the test set) What is the prediction accuracy of the baseline model which 
-# predicts the most frequent class in the train labels?
-
 ###############################################################################
 #
 # AUTHOR(S): Samantha Muellner
 #            Josh Kruse
-# DESCRIPTION: program that will implement a stochastic gradient descent algo
-#       for a neural network with one hidden layer
-# VERSION: 1.3.0v
+# DESCRIPTION: program that will demonstrate regularization and overfitting
+#           using Keras/Tensorflow
+# VERSION: 1.0.0v
 #
 ###############################################################################
 
@@ -167,12 +132,16 @@ def main():
 
     X_sc = scale(X_Mat)
 
-    # (10 points) Divide the data into 80% train, 20% test observations
+    
+    # (10 points) Divide the data into 80% train, 20% test observations (out of all 
+    # observations in the whole data set).
     is_train = np.random.choice( [True, False], X_sc.shape[0], p=[.8, .2] )
 
-    # (10 points) Next divide the train data into 60% subtrain, 40% validation
+    # (10 points) Next divide the train data into 50% subtrain, 50% validation. 
+    # e.g. as described here 
+    # https://www.tensorflow.org/tutorials/keras/overfit_and_underfit#the_higgs_dataset
     subtrain_size = np.sum( is_train == True )
-    is_subtrain = np.random.choice( [True, False], subtrain_size, p=[.6, .4] )
+    is_subtrain = np.random.choice( [True, False], subtrain_size, p=[.5, .5] )
 
     X_train = np.delete( X_sc, np.argwhere( is_subtrain != True ), 0)
     y_train = np.delete( y_vec, np.argwhere( is_subtrain != True ), 0)
@@ -181,79 +150,26 @@ def main():
     X_test = np.delete( X_sc, np.argwhere( is_train != False ), 0 )
     y_test = np.delete( y_vec, np.argwhere( is_train != False ), 0 )
 
-    # (10 points) Define three different neural networks, each with one hidden layer,
-    #   but with different numbers of hidden units (10, 100, 1000).
-    #   In keras each is a sequential model with one dense layer.
+    # (10 points) Define a for loop over regularization parameter values, and 
+    # fit a neural network for each.
 
-    # define our optimizer function -- stochastic gradient descent in this case
-    # All parameter gradients will be clipped to
-    # a maximum norm of 1.
-    #sgd = optimizers.SGD(lr=0.01, clipnorm=1.)
+    # (20 points) On the same plot, show the logistic loss as a function of the 
+    # regularization parameter (use a different color for each set, e.g. 
+    # subtrain=solid, validation=dashed). Draw a point to emphasize the minimum 
+    # of each validation loss curve. As the strength of regularization decreases, 
+    # the train loss should always decrease, whereas the validation loss should 
+    # decrease up to a certain point, and then start increasing (overfitting).
 
-    print("Creating model...")
-    # define/create models
-    model_1 = create_model(10)
-    model_2 = create_model(100)
-    model_3 = create_model(1000)
+    # (10 points) Define a variable called best_parameter_value which is the 
+    # regularization parameter value which minimizes the validation loss.
 
-    # train our models
-    result_1 = model_1.fit( x = X_train,
-                            y = y_train,
-                            epochs = MAX_EPOCHS,
-                            validation_data=(X_validation, y_validation),
-                            verbose=2)
+    # (10 points) Re-train the network on the entire train set (not just the 
+    # subtrain set), using the corresponding value of best_parameter_value.
 
-    result_2 = model_2.fit( x = X_train,
-                            y = y_train,
-                            epochs = MAX_EPOCHS,
-                            validation_data=(X_validation, y_validation),
-                            verbose=2)
-
-    result_3 = model_3.fit( x = X_train,
-                            y = y_train,
-                            epochs = MAX_EPOCHS,
-                            validation_data=(X_validation, y_validation),
-                            verbose=2)
-
-    # (20 points) On the same plot, show the logistic loss as a function of
-    #   the number of epochs (use a different color for each number of
-    #   hidden units, e.g. light blue=10, dark blue=100, black=1000,
-    #   and use a different linetype for each set,
-    #   e.g. subtrain=solid, validation=dashed).
-    #   Draw a point to emphasize the minimum of each validation loss curve.
-    # summarize history for loss
-    best_epoch_1, best_epoch_2, best_epoch_3 = plot_loss(result_1, result_2, result_3)
-
-    print("Finalizing model")
-    # (10 points) Re-train each network on the entire train set (not just
-    #   the subtrain set), using the corresponding value of best_epochs
-    #   (which should be different for each network).
-    final_model_1 = create_model(10)
-    final_model_2 = create_model(100)
-    final_model_3 = create_model(1000)
-
-    final_result_1 = final_model_1.fit( x = X_sc,
-                            y = y_vec,
-                            epochs = best_epoch_1,
-                            verbose=2)
-
-    final_result_2 = final_model_2.fit( x = X_sc,
-                            y = y_vec,
-                            epochs = best_epoch_1,
-                            verbose=2)
-
-    final_result_3 = final_model_3.fit( x = X_sc,
-                            y = y_vec,
-                            epochs = best_epoch_1,
-                            verbose=2)
-
-    # (10 points) Finally use the learned models to make predictions on the test set. What is the prediction accuracy? (percent correctly predicted labels in the test set) What is the prediction accuracy of the baseline model which predicts the most frequent class in the train labels?
-    print("Prediction accuracy (correctly labeled) for 10   hidden units :", final_model_1.evaluate(X_test,y_test)[1])
-    print("Prediction accuracy (correctly labeled) for 100  hidden units :", final_model_2.evaluate(X_test,y_test)[1])
-    print("Prediction accuracy (correctly labeled) for 1000 hidden units :", final_model_3.evaluate(X_test,y_test)[1])
-
-    baseline = np.zeros(y_test.shape)
-    print("Baseline prediction accuracy :", np.mean(baseline == y_test))
+    # (10 points) Finally use the learned model to make predictions on the test 
+    # set. What is the prediction accuracy? (percent correctly predicted labels 
+    # in the test set) What is the prediction accuracy of the baseline model which 
+    # predicts the most frequent class in the train labels?
 
     
 
