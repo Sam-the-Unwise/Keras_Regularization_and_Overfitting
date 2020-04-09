@@ -77,30 +77,22 @@ def create_model(units) :
 
 
 # function to plot our loss
-def plot_loss( res_1, res_2, res_3 ) :
-    plt.plot(res_1.history['loss'], color='#30baff', label="10 train")
-    min_index = np.argmin(res_1.history['loss'])
-    plt.plot(min_index, res_1.history['loss'][min_index], "go")
+def plot_loss( res ) :
 
-    plt.plot(res_1.history['val_loss'], '--', color='#30baff', label="10 val")
-    res_1_best = np.argmin(res_1.history['val_loss'])
-    plt.plot(res_1_best, res_1.history['val_loss'][res_1_best], "go")
+    best = [res[0], 0]
+    
+    for item in res:
+        plt.plot(item.history['loss'], color='#30baff', label="10 train")
+        min_index = np.argmin(item.history['loss'])
+        plt.plot(min_index, item.history['loss'][min_index], "go")
 
-    plt.plot(res_2.history['loss'], color='#185d80', label="100 train")
-    min_index = np.argmin(res_2.history['loss'])
-    plt.plot(min_index, res_2.history['loss'][min_index], "go")
+        plt.plot(res.history['val_loss'], '--', color='#30baff', label="10 val")
+        res_best = np.argmin(res.history['val_loss'])
+        plt.plot(res_best, res.history['val_loss'][res_best], "go")
 
-    plt.plot(res_2.history['val_loss'], '--', color='#185d80', label="100 val")
-    res_2_best = np.argmin(res_2.history['val_loss'])
-    plt.plot(res_2_best, res_2.history['val_loss'][res_2_best], "go")
-
-    plt.plot(res_3.history['loss'], color='#040f14', label="1000 train")
-    min_index = np.argmin(res_3.history['loss'])
-    plt.plot(min_index, res_3.history['loss'][min_index], "go")
-
-    plt.plot(res_3.history['val_loss'], '--', color='#040f14', label="1000 val")
-    res_3_best = np.argmin(res_3.history['val_loss'])
-    plt.plot(res_3_best, res_3.history['val_loss'][res_3_best], "go")
+        if res_best > best[1]:
+            best[0] = item
+            best[1] = res_best
 
     plt.title('model loss')
     plt.ylabel('loss')
@@ -108,7 +100,7 @@ def plot_loss( res_1, res_2, res_3 ) :
     plt.legend(loc='upper left')
     plt.show()
 
-    return res_1_best+1, res_2_best+1, res_3_best+1
+    return best
 
 
 # Function: main
@@ -160,7 +152,7 @@ def main():
 
     # (10 points) Define a for loop over regularization parameter values, and 
     # fit a neural network for each.
-    hidden_units_vec = 2**np.arange(2)
+    hidden_units_vec = 2**np.arange(10)
 
     units_matrix_list = []
     
@@ -188,6 +180,7 @@ def main():
     # of each validation loss curve. As the strength of regularization decreases, 
     # the train loss should always decrease, whereas the validation loss should 
     # decrease up to a certain point, and then start increasing (overfitting).
+    best_res = plot_loss(units_matrix_list)
 
     # (10 points) Define a variable called best_parameter_value which is the 
     # regularization parameter value which minimizes the validation loss.
