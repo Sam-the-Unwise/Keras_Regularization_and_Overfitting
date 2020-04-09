@@ -25,7 +25,7 @@ import tensorflow as tf
 
 
 # global variables
-MAX_EPOCHS = 1000
+MAX_EPOCHS = 100
 DATA_FILE = "spam.data"
 
 
@@ -180,11 +180,11 @@ def main():
     # of each validation loss curve. As the strength of regularization decreases, 
     # the train loss should always decrease, whereas the validation loss should 
     # decrease up to a certain point, and then start increasing (overfitting).
-    best_res = plot_loss(units_matrix_list)
+    
 
     # (10 points) Define a variable called best_parameter_value which is the 
     # regularization parameter value which minimizes the validation loss.
-    best_parameter_value = 0
+    best_parameter_value = plot_loss(units_matrix_list)
 
     print("The best parameter value is ", best_parameter_value)
 
