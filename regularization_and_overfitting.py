@@ -23,10 +23,6 @@ from keras import optimizers
 import tensorflow as tf
 
 
-from SG_with_early_stopping_regularization import SG_main
-from nearest_neightbors import NN_main
-from gradientDescent import GD_main
-
 # global variables
 MAX_EPOCHS = 1000
 DATA_FILE = "spam.data"
