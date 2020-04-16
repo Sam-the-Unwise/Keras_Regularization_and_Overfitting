@@ -77,22 +77,24 @@ def create_model(units) :
 
 
 # function to plot our loss
-def plot_loss( res ) :
+def plot_loss( res, vec ) :
 
-    best = [res[0], 0]
+    best = [ 0, 0, 0 ]
     
-    for item in res:
-        plt.plot(item.history['loss'], color='#30baff', label="10 train")
+    for index, item in enumerate(res):
+        plt.plot(item.history['loss'], label=str(vec[index]) + " train")
         min_index = np.argmin(item.history['loss'])
         plt.plot(min_index, item.history['loss'][min_index], "go")
 
-        plt.plot(res.history['val_loss'], '--', color='#30baff', label="10 val")
-        res_best = np.argmin(res.history['val_loss'])
-        plt.plot(res_best, res.history['val_loss'][res_best], "go")
+        plt.plot(item.history['val_loss'], '--', label=str(vec[index]) + " val")
+        res_best = np.argmin(item.history['val_loss'])
+        res_loss = np.min(item.history['val_loss'])
+        plt.plot(res_best, item.history['val_loss'][res_best], "go")
 
-        if res_best > best[1]:
-            best[0] = item
+        if res_loss > best[2]:
+            best[0] = index
             best[1] = res_best
+            best[2] = res_loss
 
     plt.title('model loss')
     plt.ylabel('loss')
@@ -153,6 +155,7 @@ def main():
     # (10 points) Define a for loop over regularization parameter values, and 
     # fit a neural network for each.
     hidden_units_vec = 2**np.arange(10)
+    print(hidden_units_vec)
 
     units_matrix_list = []
     
@@ -160,8 +163,6 @@ def main():
     for hidden_units_i in hidden_units_vec:
         # initialize keras model
         model = create_model(hidden_units_i) 
-        # add output layer
-        model.add(Dense(1, activation = "sigmoid", use_bias = False))
 
         # train on x-train, y-train
         # save results to data table (split_matrix_list) for further analysis
@@ -180,26 +181,24 @@ def main():
     # of each validation loss curve. As the strength of regularization decreases, 
     # the train loss should always decrease, whereas the validation loss should 
     # decrease up to a certain point, and then start increasing (overfitting).
-    
-
     # (10 points) Define a variable called best_parameter_value which is the 
     # regularization parameter value which minimizes the validation loss.
-    best_parameter_value = plot_loss(units_matrix_list)
+    best_tuple = plot_loss(units_matrix_list, hidden_units_vec)
+
+    best_parameter_value = hidden_units_vec[best_tuple[0]]
+    best_epoch_value = best_tuple[1]
 
     print("The best parameter value is ", best_parameter_value)
 
     # (10 points) Re-train the network on the entire train set (not just the 
     # subtrain set), using the corresponding value of best_parameter_value.
-    final_model = create_model(best_parameter_value) 
+    final_model = create_model(best_parameter_value)
     # add output layer
     final_model.add(Dense(1, activation = "sigmoid", use_bias = False))
 
-
-    # train on x-train, y-train
-    # save results to data table (split_matrix_list) for further analysis
     result = final_model.fit( x = X_sc,
                         y = y_vec,
-                        epochs = MAX_EPOCHS,
+                        epochs = best_epoch_value,
                         verbose=2)
 
     # (10 points) Finally use the learned model to make predictions on the test 
