@@ -25,7 +25,7 @@ import tensorflow as tf
 
 
 # global variables
-MAX_EPOCHS = 100
+MAX_EPOCHS = 1000
 DATA_FILE = "spam.data"
 
 
@@ -76,17 +76,31 @@ def create_model(units) :
     return model
 
 
+# function that will create our NN model given the amount of units passed in
+def create_drop_model(units, dropout):
+    sgd = optimizers.SGD(lr=0.01, clipnorm=1.)
+
+    model = Sequential()
+
+    model.add(Dense(units=units, activation='sigmoid', use_bias=False))
+    model.add(Dropout(dropout))
+    model.add(Dense(1, activation="sigmoid", use_bias=False))
+
+    model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
+
+    return model
+
 # function to plot our loss
-def plot_loss( res, vec ) :
+def plot_loss( res, vec, title ) :
 
     best = [ 0, 0, 0 ]
     
     for index, item in enumerate(res):
-        plt.plot(item.history['loss'], label=str(vec[index]) + " train")
+        plt.plot(item.history['loss'], label=str(vec[index]) + " train", color=generate_color(index))
         min_index = np.argmin(item.history['loss'])
         plt.plot(min_index, item.history['loss'][min_index], "go")
 
-        plt.plot(item.history['val_loss'], '--', label=str(vec[index]) + " val")
+        plt.plot(item.history['val_loss'], '--', label=str(vec[index]) + " val", color=generate_color(index))
         res_best = np.argmin(item.history['val_loss'])
         res_loss = np.min(item.history['val_loss'])
         plt.plot(res_best, item.history['val_loss'][res_best], "go")
@@ -96,7 +110,7 @@ def plot_loss( res, vec ) :
             best[1] = res_best
             best[2] = res_loss
 
-    plt.title('model loss')
+    plt.title('model loss with respect to ' + title)
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(loc='upper left')
@@ -104,6 +118,10 @@ def plot_loss( res, vec ) :
 
     return best
 
+def generate_color( seed ):
+    random.seed( seed )
+    color = '#{:02x}{:02x}{:02x}'.format(*map(lambda x: random.randint(0, 255), range(3)))
+    return color
 
 # Function: main
 def main():
@@ -183,7 +201,7 @@ def main():
     # decrease up to a certain point, and then start increasing (overfitting).
     # (10 points) Define a variable called best_parameter_value which is the 
     # regularization parameter value which minimizes the validation loss.
-    best_tuple = plot_loss(units_matrix_list, hidden_units_vec)
+    best_tuple = plot_loss(units_matrix_list, hidden_units_vec, "hidden units")
 
     best_parameter_value = hidden_units_vec[best_tuple[0]]
     best_epoch_value = best_tuple[1]
@@ -192,11 +210,9 @@ def main():
 
     # (10 points) Re-train the network on the entire train set (not just the 
     # subtrain set), using the corresponding value of best_parameter_value.
-    final_model = create_model(best_parameter_value)
-    # add output layer
-    final_model.add(Dense(1, activation = "sigmoid", use_bias = False))
+    better_model = create_model(best_parameter_value)
 
-    result = final_model.fit( x = X_sc,
+    result = better_model.fit( x = X_sc,
                         y = y_vec,
                         epochs = best_epoch_value,
                         verbose=2)
@@ -206,10 +222,55 @@ def main():
     # in the test set) What is the prediction accuracy of the baseline model which 
     # predicts the most frequent class in the train labels?
 
-    print("Prediction accuracy (correctly labeled) for the best parameter value is :", final_model.evaluate(X_test,y_test)[1])
+    print("Prediction accuracy (correctly labeled) for the best parameter value is :", better_model.evaluate(X_test,y_test)[1])
+    baseline = np.zeros(y_test.shape)
+    print("Baseline prediction accuracy :", np.mean(baseline == y_test))
 
-    
+    # (10 points) Define a for loop over regularization parameter values, and
+    # fit a neural network for each.
+    dropout_vec = np.array([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9])
+    print(dropout_vec)
 
-    
+    dropout_matrix_list = []
+
+    # loop over the different hidden units in hidden_units_vec
+    for dropout_i in dropout_vec:
+        # initialize keras model
+        model = create_drop_model(best_parameter_value, dropout_i)
+
+        # train on x-train, y-train
+        # save results to data table (split_matrix_list) for further analysis
+        dropout_matrix_list.append(model.fit(x=X_train,
+                                           y=y_train,
+                                           epochs=MAX_EPOCHS,
+                                           validation_data=(X_validation, y_validation),
+                                           verbose=2))
+
+    best_tuple = plot_loss(dropout_matrix_list, dropout_vec, "Dropout")
+
+    best_dropout_value = hidden_units_vec[best_tuple[0]]
+    best_epoch_value = best_tuple[1]
+
+    # (10 points) Re-train the network on the entire train set (not just the
+    # subtrain set), using the corresponding value of best_parameter_value.
+    final_model = create_drop_model(best_parameter_value, best_dropout_value)
+
+    result = final_model.fit( x = X_sc,
+                        y = y_vec,
+                        epochs = best_epoch_value,
+                        verbose=2)
+
+    # (10 points) Finally use the learned model to make predictions on the test
+    # set. What is the prediction accuracy? (percent correctly predicted labels
+    # in the test set) What is the prediction accuracy of the baseline model which
+    # predicts the most frequent class in the train labels?
+
+    print("Prediction accuracy (correctly labeled) for the best hidden unit value is :", better_model.evaluate(X_test,y_test)[1])
+
+    print("Prediction accuracy (correctly labeled) for the best dropout value + hidden unit is :", final_model.evaluate(X_test,y_test)[1])
+
+    baseline = np.zeros(y_test.shape)
+    print("Baseline prediction accuracy :", np.mean(baseline == y_test))
+
 main()
 
