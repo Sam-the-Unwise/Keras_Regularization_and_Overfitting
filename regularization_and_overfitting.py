@@ -105,6 +105,8 @@ def plot_loss( res, vec, title ) :
         res_loss = np.min(item.history['val_loss'])
         plt.plot(res_best, item.history['val_loss'][res_best], "go")
 
+        print(res_loss)
+
         if res_loss > best[2]:
             best[0] = index
             best[1] = res_best
@@ -176,7 +178,7 @@ def main():
     print(hidden_units_vec)
 
     units_matrix_list = []
-    
+
     # loop over the different hidden units in hidden_units_vec
     for hidden_units_i in hidden_units_vec:
         # initialize keras model
@@ -190,8 +192,6 @@ def main():
                                 validation_data=(X_validation, y_validation),
                                 verbose=2))
 
-    print(units_matrix_list)
-        
 
     # (20 points) On the same plot, show the logistic loss as a function of the 
     # regularization parameter (use a different color for each set, e.g. 
