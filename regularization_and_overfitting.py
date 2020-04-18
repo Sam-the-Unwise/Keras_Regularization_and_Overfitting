@@ -71,7 +71,7 @@ def create_model(units) :
     model.add(Dense(units=units, activation='sigmoid', use_bias=False))
     model.add(Dense(1, activation="sigmoid", use_bias=False))
     
-    model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     
     return model
 
@@ -86,7 +86,7 @@ def create_drop_model(units, dropout):
     model.add(Dropout(dropout))
     model.add(Dense(1, activation="sigmoid", use_bias=False))
 
-    model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     return model
 
